@@ -7,38 +7,32 @@
     body {
       background-color: #121212;
       color: white;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       padding: 30px 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 15px;
-      min-height: 100vh;
       margin: 0;
     }
-
     h1 {
-      user-select: none;
       font-weight: 700;
       font-size: 2rem;
       text-align: center;
-      letter-spacing: 1.5px;
       margin-bottom: 30px;
     }
-
     .container {
       display: flex;
       gap: 25px;
+      flex-wrap: wrap;
+      justify-content: center;
       width: 100%;
       max-width: 900px;
-      margin: 0 auto;
-      justify-content: center;
     }
-
     .box {
       background-color: #222;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(255 255 255 / 0.1);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
       flex-grow: 1;
       flex-shrink: 1;
       min-width: 280px;
@@ -46,190 +40,149 @@
       flex-direction: column;
       padding: 20px;
     }
-
     label {
       font-weight: 600;
       font-size: 1.1rem;
       margin-bottom: 12px;
       user-select: none;
+      text-align: center;
     }
-
     textarea {
-      flex-grow: 1;
-      background-color: #1e1e1e;
+      background-color: #1e1e1e;  /* same color for both */
       border: none;
       border-radius: 6px;
-      color: white;
+      color: white;               /* white text for both */
       font-family: monospace;
       font-size: 15px;
       padding: 12px;
       resize: vertical;
       min-height: 250px;
+      text-align: center;
+      caret-color: white;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.3;
     }
-
     textarea::placeholder {
       color: #888;
+      text-align: center;
     }
-
     textarea:focus {
       outline: none;
       background-color: #2a2a2a;
       box-shadow: 0 0 6px #4a90e2;
     }
-
-    button {
-      margin-top: 15px;
-      padding: 12px 20px;
+    button.highlight-btn {
+      margin-top: 12px;
       background-color: #4a90e2;
-      border: none;
-      border-radius: 6px;
       color: white;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 14px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
       user-select: none;
       transition: background-color 0.25s ease;
-      box-shadow: 0 3px 6px rgba(74, 144, 226, 0.5);
+      align-self: center;
+      width: fit-content;
     }
-
-    button:hover {
-      background-color: #357abd;
-    }
-
-    button:active {
-      background-color: #2a5d9e;
-      box-shadow: none;
+    button.highlight-btn:hover {
+      background-color: #357ABD;
     }
   </style>
 </head>
 <body>
-
   <h1>Invisible Language Translator</h1>
 
   <div class="container">
     <div class="box">
       <label for="plain">Plain Text</label>
       <textarea id="plain" placeholder="Type your message..."></textarea>
-      <button onclick="copyText('plain')">Copy Plain Text</button>
+      <button class="highlight-btn" data-target="plain">Highlight All</button>
     </div>
-
     <div class="box">
       <label for="secret">Invisible Language</label>
       <textarea id="secret" placeholder="Invisible output..."></textarea>
-      <button onclick="copyText('secret')">Copy Invisible</button>
+      <button class="highlight-btn" data-target="secret">Highlight All</button>
     </div>
   </div>
 
   <script>
-    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ~!@#$%^&*()_+-={}[]|\\:;\"'<>,.?/";
-
-    const invisibleDigits = [
-      '\u200B', // 0 ZWSP
-      '\u200C', // 1 ZWNJ
-      '\u200D', // 2 ZWJ
-      '\u2060', // 3 Word Joiner
-      '\u2061', // 4 Function Application
-      '\u2062', // 5 Invisible Times
-      '\u2063', // 6 Invisible Separator
-      '\u2064', // 7 Invisible Plus
-      '\u206A', // 8 Inhibit Symmetric Swapping
-      '\u206B'  // 9 Activate Symmetric Swapping
+    const digits = [
+      '\u200B', // 0
+      '\u200C', // 1
+      '\u200D', // 2
+      '\u2060', // 3
+      '\u2061', // 4
+      '\u2062', // 5
+      '\u2063', // 6
+      '\u2064', // 7
+      '\u206A', // 8
+      '\u206B'  // 9
     ];
+    const stop = '\u2069';
 
-    const delimiter = '\u2069'; // End of character
-
-    const digitMap = {};
-    invisibleDigits.forEach((char, index) => digitMap[char] = index);
+    const charMap = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()_+-={}[]|\\:;\"'<>,.?/".split("");
+    const charIndex = {};
+    charMap.forEach((ch, i) => charIndex[ch] = i);
 
     function encode(text) {
-      let result = '';
+      let result = "";
       for (const ch of text) {
-        const index = charset.indexOf(ch);
-        if (index === -1) continue;
-        const strIndex = index.toString(10);
-        for (const digit of strIndex) {
-          result += invisibleDigits[parseInt(digit)];
+        const idx = charIndex[ch];
+        if (idx === undefined) continue;
+        const numStr = idx.toString();
+        for (const digit of numStr) {
+          result += digits[parseInt(digit)];
         }
-        result += delimiter;
+        result += stop;
       }
       return result;
     }
 
-    function decode(code) {
-      let result = '';
-      let current = '';
-      for (const ch of code) {
-        if (ch === delimiter) {
-          let number = '';
-          for (const d of current) {
-            if (!(d in digitMap)) return '?';
-            number += digitMap[d];
-          }
-          result += charset[parseInt(number)] || '?';
-          current = '';
+    function decode(invis) {
+      let num = "", result = "";
+      for (const ch of invis) {
+        if (ch === stop) {
+          const index = parseInt(num);
+          result += charMap[index] || "";
+          num = "";
         } else {
-          current += ch;
+          const i = digits.indexOf(ch);
+          if (i !== -1) num += i;
         }
       }
       return result;
     }
 
-    const plain = document.getElementById('plain');
-    const secret = document.getElementById('secret');
-
+    const plain = document.getElementById("plain");
+    const secret = document.getElementById("secret");
     let ignore = false;
 
-    plain.addEventListener('input', () => {
+    plain.addEventListener("input", () => {
       if (ignore) return;
       ignore = true;
       secret.value = encode(plain.value);
       ignore = false;
     });
 
-    secret.addEventListener('input', () => {
+    secret.addEventListener("input", () => {
       if (ignore) return;
       ignore = true;
       plain.value = decode(secret.value);
       ignore = false;
     });
 
-    function copyText(id) {
-      const el = document.getElementById(id);
-      el.select();
-      el.setSelectionRange(0, 99999);
-      navigator.clipboard.writeText(el.value).then(() => {
-        alert('Copied!');
-      }).catch(() => {
-        alert('Failed to copy.');
+    document.querySelectorAll('button.highlight-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const textarea = document.getElementById(targetId);
+        textarea.focus();
+        textarea.select();
       });
-    }
-
-    function adjustBoxSizes() {
-      const container = document.querySelector('.container');
-      const boxes = document.querySelectorAll('.box');
-      const containerWidth = container.clientWidth;
-      const minWidth = 280;
-      const gap = 25;
-
-      if (containerWidth >= (minWidth * 2 + gap)) {
-        const width = (containerWidth - gap) / 2;
-        boxes.forEach(box => {
-          box.style.maxWidth = width + 'px';
-          box.style.flexBasis = width + 'px';
-        });
-        container.style.flexWrap = 'nowrap';
-      } else {
-        boxes.forEach(box => {
-          box.style.maxWidth = '100%';
-          box.style.flexBasis = '100%';
-        });
-        container.style.flexWrap = 'wrap';
-      }
-    }
-
-    window.addEventListener('load', adjustBoxSizes);
-    window.addEventListener('resize', adjustBoxSizes);
+    });
   </script>
-
 </body>
 </html>
