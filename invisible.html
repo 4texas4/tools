@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Invisible Language Decoder / Encoder</title>
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px 15px;
+    }
+    h1 {
+      margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+      user-select: none;
+      letter-spacing: 1.5px;
+    }
+    .container {
+      display: flex;
+      gap: 25px;
+      width: 100%;
+      max-width: 900px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .box {
+      background-color: #222222;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255 255 255 / 0.1);
+      flex: 1 1 400px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      min-width: 300px;
+      max-width: 450px;
+    }
+    label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      user-select: none;
+    }
+    textarea {
+      flex-grow: 1;
+      background-color: #1e1e1e;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-family: monospace;
+      font-size: 15px;
+      padding: 12px;
+      resize: vertical;
+      min-height: 250px;
+      transition: background-color 0.3s;
+    }
+    textarea::placeholder {
+      color: #888888;
+    }
+    textarea:focus {
+      outline: none;
+      background-color: #2a2a2a;
+      box-shadow: 0 0 6px #4a90e2;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px 20px;
+      background-color: #4a90e2;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.25s ease;
+      box-shadow: 0 3px 6px rgba(74, 144, 226, 0.5);
+    }
+    button:hover {
+      background-color: #357ABD;
+      box-shadow: 0 4px 8px rgba(53, 122, 189, 0.8);
+    }
+    button:active {
+      background-color: #2a5d9e;
+      box-shadow: none;
+    }
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .box {
+        max-width: 90vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Invisible Language Decoder / Encoder</h1>
+  <div class="container">
+    <div class="box">
+      <label for="plain">Plain Text</label>
+      <textarea id="plain" placeholder="Type plain text..."></textarea>
+      <button onclick="copyText('plain')">Copy Left</button>
+    </div>
+
+    <div class="box">
+      <label for="secret">Invisible Code</label>
+      <textarea id="secret" placeholder="Invisible encoded output..."></textarea>
+      <button onclick="copyText('secret')">Copy Right</button>
+    </div>
+  </div>
+
+  <script>
+    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ~!@#$%^&*()_+-={}[]|\\:;\"'<>,.?/";
+    const LRM = '\u200E'; // move right
+    const RLM = '\u200F'; // select
+
+    const plain = document.getElementById('plain');
+    const secret = document.getElementById('secret');
+
+    function encode(text) {
+      let result = '';
+      for (const char of text) {
+        const index = charset.indexOf(char);
+        if (index === -1) continue;
+        result += LRM.repeat(index) + RLM;
+      }
+      return result;
+    }
+
+    function decode(code) {
+      let output = '';
+      let pointer = 0;
+      for (const char of code) {
+        if (char === LRM) {
+          pointer++;
+        } else if (char === RLM) {
+          output += charset[pointer] || '?';
+          pointer = 0;
+        }
+      }
+      return output;
+    }
+
+    function refreshEncoding() {
+      secret.value = encode(plain.value);
+    }
+
+    plain.addEventListener('input', refreshEncoding);
+
+    secret.addEventListener('input', () => {
+      plain.value = decode(secret.value);
+    });
+
+    function copyText(id) {
+      const text = document.getElementById(id);
+      text.select();
+      text.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      alert('Copied!');
+    }
+  </script>
+</body>
+</html>
