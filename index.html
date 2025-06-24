@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cool Tools</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      gap: 30px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      user-select: none;
+    }
+    .button-container {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 500px;
+    }
+    a.button {
+      background-color: #4a90e2;
+      color: white;
+      padding: 20px 40px;
+      text-decoration: none;
+      font-size: 1.4rem;
+      font-weight: 600;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(74, 144, 226, 0.7);
+      user-select: none;
+      transition: background-color 0.3s ease;
+      flex: 1 1 180px;
+      text-align: center;
+    }
+    a.button:hover {
+      background-color: #357ABD;
+      box-shadow: 0 6px 14px rgba(53, 122, 189, 0.9);
+    }
+    a.button:active {
+      background-color: #2a5d9e;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cool Tools</h1>
+  <div class="button-container">
+    <a href="invisible.html" class="button" role="button" aria-label="Invisible Encode/Decode Tool">Invisible Encode/Decode</a>
+    <a href="picture.html" class="button" role="button" aria-label="Picture Sketch Tool">Picture Sketch</a>
+  </div>
+</body>
+</html>
