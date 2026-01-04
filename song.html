@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SC Downloader</title>
 
 <style>
@@ -15,44 +14,49 @@ body {
 }
 
 .search {
-  padding: 8px;
+  padding: 4px;
 }
 
 input {
-  width: 100%;
-  padding: 10px;
-  font-size: 15px;
-  border-radius: 8px;
+  width: calc(100% - 8px);
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 6px;
   border: none;
   outline: none;
 }
 
 #results {
-  padding: 6px;
+  padding: 4px;
 }
 
 .track {
   display: flex;
-  gap: 10px;
-  padding: 8px;
+  gap: 8px;
+  padding: 6px;
   border-bottom: 1px solid #1f1f1f;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .track img {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 6px;
 }
 
 .track-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .track-artist {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.7;
+}
+
+.track.selected {
+  background: #333;
 }
 </style>
 </head>
@@ -70,9 +74,9 @@ input {
 <script>
 let typingTimer;
 const delay = 1000;
-
 const input = document.getElementById("query");
 const results = document.getElementById("results");
+let selectedIndex = -1;
 
 input.addEventListener("input", () => {
   clearTimeout(typingTimer);
@@ -83,6 +87,7 @@ async function search() {
   const q = input.value.trim();
   if (!q) {
     results.innerHTML = "";
+    selectedIndex = -1;
     return;
   }
 
@@ -93,11 +98,11 @@ async function search() {
   const data = await res.json();
 
   results.innerHTML = "";
+  selectedIndex = -1;
 
-  data.results.forEach(track => {
+  data.results.forEach((track, i) => {
     const div = document.createElement("div");
     div.className = "track";
-
     div.innerHTML = `
       <img src="${track.artwork}">
       <div>
@@ -105,15 +110,39 @@ async function search() {
         <div class="track-artist">${track.artist}</div>
       </div>
     `;
-
     div.onclick = () => download(track);
     results.appendChild(div);
   });
+  updateSelection();
 }
+
+// D-pad navigation
+function updateSelection() {
+  const tracks = document.querySelectorAll(".track");
+  tracks.forEach((t, i) => t.classList.toggle("selected", i === selectedIndex));
+}
+
+document.addEventListener("keydown", (e) => {
+  const tracks = document.querySelectorAll(".track");
+  if (tracks.length === 0) return;
+
+  if (e.keyCode === 38) { // UP
+    selectedIndex = selectedIndex <= 0 ? tracks.length - 1 : selectedIndex - 1;
+    updateSelection();
+    e.preventDefault();
+  } else if (e.keyCode === 40) { // DOWN
+    selectedIndex = selectedIndex >= tracks.length - 1 ? 0 : selectedIndex + 1;
+    updateSelection();
+    e.preventDefault();
+  } else if (e.keyCode === 13) { // CENTER / OK
+    if (selectedIndex >= 0 && selectedIndex < tracks.length) {
+      tracks[selectedIndex].click();
+    }
+  }
+});
 
 async function download(track) {
   try {
-    // Extract username + slug from REAL SoundCloud URL
     const url = new URL(track.url);
     const parts = url.pathname.split("/").filter(Boolean);
     const username = parts[0];
@@ -123,35 +152,23 @@ async function download(track) {
     const res = await fetch(api);
     const data = await res.json();
 
-    // Fetch MP3
     const mp3Res = await fetch(data.streamUrl);
     const arrayBuffer = await mp3Res.arrayBuffer();
 
-    // Fetch artwork
     const imgRes = await fetch(track.artwork);
     const imgBuffer = await imgRes.arrayBuffer();
 
-    // Write ID3 tags
     const writer = new ID3Writer(arrayBuffer);
     writer
       .setFrame("TIT2", track.title)
       .setFrame("TPE1", [track.artist])
       .setFrame("TALB", "SoundCloud")
-      .setFrame("APIC", {
-        type: 3,
-        data: imgBuffer,
-        description: "Cover"
-      });
-
+      .setFrame("APIC", { type: 3, data: imgBuffer, description: "Cover" });
     writer.addTag();
 
     const taggedBlob = new Blob([writer.arrayBuffer], { type: "audio/mpeg" });
-
     const filename =
-      track.title
-        .replace(/[^a-z0-9\- ]/gi, "")
-        .trim()
-        .replace(/\s+/g, "-") + ".mp3";
+      track.title.replace(/[^a-z0-9\- ]/gi, "").trim().replace(/\s+/g, "-") + ".mp3";
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(taggedBlob);
@@ -160,12 +177,11 @@ async function download(track) {
     a.click();
     a.remove();
   } catch (e) {
-    alert("Metadata tagging failed");
+    alert("Download failed");
     console.error(e);
   }
 }
 </script>
-
 
 </body>
 </html>
