@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SC Downloader KaiOS</title>
+<title>Music</title>
 
 <style>
 body {
@@ -44,7 +44,7 @@ input {
 <body>
 
 <div class="search">
-  <input id="query" placeholder="Search SoundCloud">
+  <input id="query" placeholder="Search SoundCloud" autofocus>
 </div>
 
 <div id="results"></div>
@@ -97,20 +97,12 @@ function updateSelection() {
   tracks.forEach((t,i) => t.classList.toggle("selected", i === selectedIndex));
 }
 
+// KaiOS D-pad: Center only, Up/Down are browser-dependent
 document.addEventListener("keydown", (e) => {
   const tracks = document.querySelectorAll(".track");
   if (!tracks.length) return;
 
-  // KaiOS numeric key mapping
-  if (e.key === "6") { // NEXT
-    selectedIndex = selectedIndex >= tracks.length - 1 ? 0 : selectedIndex + 1;
-    updateSelection();
-    e.preventDefault();
-  } else if (e.key === "9") { // PREV
-    selectedIndex = selectedIndex <= 0 ? tracks.length - 1 : selectedIndex - 1;
-    updateSelection();
-    e.preventDefault();
-  } else if (e.keyCode === 13) { // CENTER / OK
+  if (e.keyCode === 13) { // Center / Enter
     if (selectedIndex >= 0 && selectedIndex < tracks.length) {
       tracks[selectedIndex].click();
     }
