@@ -65,6 +65,8 @@ input {
 
 <div id="results"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/browser-id3-writer@4/dist/browser-id3-writer.min.js"></script>
+
 <script>
 let typingTimer;
 const delay = 1000;
@@ -111,9 +113,9 @@ async function search() {
 
 async function download(track) {
   try {
+    // Extract username + slug from REAL SoundCloud URL
     const url = new URL(track.url);
     const parts = url.pathname.split("/").filter(Boolean);
-
     const username = parts[0];
     const slug = parts[1];
 
@@ -121,8 +123,29 @@ async function download(track) {
     const res = await fetch(api);
     const data = await res.json();
 
-    const mp3 = await fetch(data.streamUrl);
-    const blob = await mp3.blob();
+    // Fetch MP3
+    const mp3Res = await fetch(data.streamUrl);
+    const arrayBuffer = await mp3Res.arrayBuffer();
+
+    // Fetch artwork
+    const imgRes = await fetch(track.artwork);
+    const imgBuffer = await imgRes.arrayBuffer();
+
+    // Write ID3 tags
+    const writer = new ID3Writer(arrayBuffer);
+    writer
+      .setFrame("TIT2", track.title)
+      .setFrame("TPE1", [track.artist])
+      .setFrame("TALB", "SoundCloud")
+      .setFrame("APIC", {
+        type: 3,
+        data: imgBuffer,
+        description: "Cover"
+      });
+
+    writer.addTag();
+
+    const taggedBlob = new Blob([writer.arrayBuffer], { type: "audio/mpeg" });
 
     const filename =
       track.title
@@ -131,16 +154,18 @@ async function download(track) {
         .replace(/\s+/g, "-") + ".mp3";
 
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(taggedBlob);
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
-  } catch {
-    alert("Download failed");
+  } catch (e) {
+    alert("Metadata tagging failed");
+    console.error(e);
   }
 }
 </script>
+
 
 </body>
 </html>
