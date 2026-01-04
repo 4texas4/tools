@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoundCloud Downloader</title>
+
+<title>SC Downloader</title>
 
 <style>
 body {
@@ -13,65 +14,44 @@ body {
   color: #fff;
 }
 
-header {
-  padding: 15px;
-  background: #ff5500;
-  font-weight: bold;
-  text-align: center;
-}
-
 .search {
-  display: flex;
-  padding: 10px;
-  gap: 10px;
+  padding: 8px;
 }
 
 input {
-  flex: 1;
-  padding: 12px;
-  font-size: 16px;
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
   border-radius: 8px;
   border: none;
-}
-
-button {
-  padding: 12px 16px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: none;
-  background: #ff5500;
-  color: #fff;
-  cursor: pointer;
+  outline: none;
 }
 
 #results {
-  padding: 10px;
+  padding: 6px;
 }
 
 .track {
   display: flex;
-  gap: 12px;
-  padding: 10px;
-  border-bottom: 1px solid #222;
+  gap: 10px;
+  padding: 8px;
+  border-bottom: 1px solid #1f1f1f;
   cursor: pointer;
 }
 
 .track img {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 6px;
 }
 
-.track-info {
-  flex: 1;
-}
-
 .track-title {
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .track-artist {
-  font-size: 14px;
+  font-size: 12px;
   opacity: 0.7;
 }
 </style>
@@ -79,19 +59,30 @@ button {
 
 <body>
 
-<header>SoundCloud MP3 Downloader</header>
-
 <div class="search">
-  <input id="query" placeholder="Search song or artist">
-  <button onclick="search()">Search</button>
+  <input id="query" placeholder="Search SoundCloud">
 </div>
 
 <div id="results"></div>
 
 <script>
+let typingTimer;
+const delay = 1000;
+
+const input = document.getElementById("query");
+const results = document.getElementById("results");
+
+input.addEventListener("input", () => {
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(search, delay);
+});
+
 async function search() {
-  const q = document.getElementById("query").value.trim();
-  if (!q) return;
+  const q = input.value.trim();
+  if (!q) {
+    results.innerHTML = "";
+    return;
+  }
 
   const query = q.replace(/\s+/g, "+");
   const url = `https://vapor.my/worker/music/soundcloud/search/${query}?max=15&offset=0`;
@@ -99,7 +90,6 @@ async function search() {
   const res = await fetch(url);
   const data = await res.json();
 
-  const results = document.getElementById("results");
   results.innerHTML = "";
 
   data.results.forEach(track => {
@@ -108,7 +98,7 @@ async function search() {
 
     div.innerHTML = `
       <img src="${track.artwork}">
-      <div class="track-info">
+      <div>
         <div class="track-title">${track.title}</div>
         <div class="track-artist">${track.artist}</div>
       </div>
@@ -121,7 +111,6 @@ async function search() {
 
 async function download(track) {
   try {
-    // ALWAYS use the real SoundCloud URL
     const url = new URL(track.url);
     const parts = url.pathname.split("/").filter(Boolean);
 
@@ -135,10 +124,11 @@ async function download(track) {
     const mp3 = await fetch(data.streamUrl);
     const blob = await mp3.blob();
 
-    let filename = track.title
-      .replace(/[^a-z0-9\- ]/gi, "")
-      .trim()
-      .replace(/\s+/g, "-") + ".mp3";
+    const filename =
+      track.title
+        .replace(/[^a-z0-9\- ]/gi, "")
+        .trim()
+        .replace(/\s+/g, "-") + ".mp3";
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -146,8 +136,8 @@ async function download(track) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-  } catch (e) {
-    alert("Download failed.");
+  } catch {
+    alert("Download failed");
   }
 }
 </script>
