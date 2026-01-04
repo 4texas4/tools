@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoundCloud Downloader</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0f0f0f;
+  color: #fff;
+}
+
+header {
+  padding: 15px;
+  background: #ff5500;
+  font-weight: bold;
+  text-align: center;
+}
+
+.search {
+  display: flex;
+  padding: 10px;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 12px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background: #ff5500;
+  color: #fff;
+  cursor: pointer;
+}
+
+#results {
+  padding: 10px;
+}
+
+.track {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #222;
+  cursor: pointer;
+}
+
+.track img {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+}
+
+.track-info {
+  flex: 1;
+}
+
+.track-title {
+  font-weight: bold;
+}
+
+.track-artist {
+  font-size: 14px;
+  opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+
+<header>SoundCloud MP3 Downloader</header>
+
+<div class="search">
+  <input id="query" placeholder="Search song or artist">
+  <button onclick="search()">Search</button>
+</div>
+
+<div id="results"></div>
+
+<script>
+async function search() {
+  const q = document.getElementById("query").value.trim();
+  if (!q) return;
+
+  const query = q.replace(/\s+/g, "+");
+  const url = `https://vapor.my/worker/music/soundcloud/search/${query}?max=15&offset=0`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const results = document.getElementById("results");
+  results.innerHTML = "";
+
+  data.results.forEach(track => {
+    const div = document.createElement("div");
+    div.className = "track";
+
+    div.innerHTML = `
+      <img src="${track.artwork}">
+      <div class="track-info">
+        <div class="track-title">${track.title}</div>
+        <div class="track-artist">${track.artist}</div>
+      </div>
+    `;
+
+    div.onclick = () => download(track);
+    results.appendChild(div);
+  });
+}
+
+async function download(track) {
+  try {
+    // ALWAYS use the real SoundCloud URL
+    const url = new URL(track.url);
+    const parts = url.pathname.split("/").filter(Boolean);
+
+    const username = parts[0];
+    const slug = parts[1];
+
+    const api = `https://vapor.my/worker/music/soundcloud/download/${username}/${slug}`;
+    const res = await fetch(api);
+    const data = await res.json();
+
+    const mp3 = await fetch(data.streamUrl);
+    const blob = await mp3.blob();
+
+    let filename = track.title
+      .replace(/[^a-z0-9\- ]/gi, "")
+      .trim()
+      .replace(/\s+/g, "-") + ".mp3";
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (e) {
+    alert("Download failed.");
+  }
+}
+</script>
+
+</body>
+</html>
