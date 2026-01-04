@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SC Downloader</title>
+<title>SC Downloader KaiOS</title>
 
 <style>
 body {
@@ -13,10 +13,7 @@ body {
   color: #fff;
 }
 
-.search {
-  padding: 4px;
-}
-
+.search { padding: 4px; }
 input {
   width: calc(100% - 8px);
   padding: 8px;
@@ -26,9 +23,7 @@ input {
   outline: none;
 }
 
-#results {
-  padding: 4px;
-}
+#results { padding: 4px; }
 
 .track {
   display: flex;
@@ -39,25 +34,10 @@ input {
   transition: background 0.15s;
 }
 
-.track img {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-}
-
-.track-title {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.track-artist {
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-.track.selected {
-  background: #333;
-}
+.track img { width: 48px; height: 48px; border-radius: 6px; }
+.track-title { font-size: 13px; font-weight: 600; }
+.track-artist { font-size: 11px; opacity: 0.7; }
+.track.selected { background: #333; }
 </style>
 </head>
 
@@ -85,11 +65,7 @@ input.addEventListener("input", () => {
 
 async function search() {
   const q = input.value.trim();
-  if (!q) {
-    results.innerHTML = "";
-    selectedIndex = -1;
-    return;
-  }
+  if (!q) { results.innerHTML = ""; selectedIndex = -1; return; }
 
   const query = q.replace(/\s+/g, "+");
   const url = `https://vapor.my/worker/music/soundcloud/search/${query}?max=15&offset=0`;
@@ -100,7 +76,7 @@ async function search() {
   results.innerHTML = "";
   selectedIndex = -1;
 
-  data.results.forEach((track, i) => {
+  data.results.forEach(track => {
     const div = document.createElement("div");
     div.className = "track";
     div.innerHTML = `
@@ -116,22 +92,22 @@ async function search() {
   updateSelection();
 }
 
-// D-pad navigation
 function updateSelection() {
   const tracks = document.querySelectorAll(".track");
-  tracks.forEach((t, i) => t.classList.toggle("selected", i === selectedIndex));
+  tracks.forEach((t,i) => t.classList.toggle("selected", i === selectedIndex));
 }
 
 document.addEventListener("keydown", (e) => {
   const tracks = document.querySelectorAll(".track");
-  if (tracks.length === 0) return;
+  if (!tracks.length) return;
 
-  if (e.keyCode === 38) { // UP
-    selectedIndex = selectedIndex <= 0 ? tracks.length - 1 : selectedIndex - 1;
+  // KaiOS numeric key mapping
+  if (e.key === "6") { // NEXT
+    selectedIndex = selectedIndex >= tracks.length - 1 ? 0 : selectedIndex + 1;
     updateSelection();
     e.preventDefault();
-  } else if (e.keyCode === 40) { // DOWN
-    selectedIndex = selectedIndex >= tracks.length - 1 ? 0 : selectedIndex + 1;
+  } else if (e.key === "9") { // PREV
+    selectedIndex = selectedIndex <= 0 ? tracks.length - 1 : selectedIndex - 1;
     updateSelection();
     e.preventDefault();
   } else if (e.keyCode === 13) { // CENTER / OK
@@ -167,8 +143,7 @@ async function download(track) {
     writer.addTag();
 
     const taggedBlob = new Blob([writer.arrayBuffer], { type: "audio/mpeg" });
-    const filename =
-      track.title.replace(/[^a-z0-9\- ]/gi, "").trim().replace(/\s+/g, "-") + ".mp3";
+    const filename = track.title.replace(/[^a-z0-9\- ]/gi,"").trim().replace(/\s+/g,"-") + ".mp3";
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(taggedBlob);
@@ -176,7 +151,7 @@ async function download(track) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-  } catch (e) {
+  } catch(e) {
     alert("Download failed");
     console.error(e);
   }
