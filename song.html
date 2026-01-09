@@ -68,7 +68,7 @@ async function search() {
   if (!q) { results.innerHTML = ""; selectedIndex = -1; return; }
 
   const query = q.replace(/\s+/g, "+");
-  const url = `https://vapor.my/worker/music/soundcloud/search/${query}?max=15&offset=0`;
+  const url = `https://0.4texasplayz4.workers.dev/s/${query}`;
 
   const res = await fetch(url);
   const data = await res.json();
@@ -116,7 +116,7 @@ async function download(track) {
     const username = parts[0];
     const slug = parts[1];
 
-    const api = `https://vapor.my/worker/music/soundcloud/download/${username}/${slug}`;
+    const api = `https://0.4texasplayz4.workers.dev/d/${username}/${slug}`;
     const res = await fetch(api);
     const data = await res.json();
 
