@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Plain Text</title>
+</head>
+<body>
+<pre id="output">Loading…</pre>
+
+<script>
+(async () => {
+  const output = document.getElementById("output");
+
+  // Get prompt from URL: ?hello world
+  const prompt = decodeURIComponent(location.search.slice(1)).trim();
+
+  if (!prompt) {
+    output.textContent = "No prompt provided.";
+    return;
+  }
+
+  try {
+    // Load API key
+    const keyRes = await fetch("https://groq-api-keys.pages.dev/apikeys.txt");
+    const keyText = await keyRes.text();
+    const API_KEY = keyText.split("\n")[0].trim();
+
+    if (!API_KEY) {
+      output.textContent = "API key missing.";
+      return;
+    }
+
+    // Call Groq
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content: "Give the shortest possible correct answer. One sentence max. No explanations unless explicitly requested."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: 50
+      })
+    });
+
+    if (!res.ok) {
+      output.textContent = "API error.";
+      return;
+    }
+
+    const data = await res.json();
+    output.textContent = data.choices[0].message.content.trim();
+
+  } catch (err) {
+    output.textContent = "Error.";
+  }
+})();
+</script>
+</body>
+</html>
