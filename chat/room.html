@@ -3,37 +3,33 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Rat Chat — Room</title>
+  <title>Zenith Chat — Room</title>
   <style>
-    html, body { margin:0; padding:0; height:100%; background-color:#12110b; font-family:Arial, sans-serif; overflow:hidden; }
+    html, body { margin:0; padding:0; height:100%; background-color:#0b1425; font-family:Arial, sans-serif; overflow:hidden; }
     ::-webkit-scrollbar { width:8px; }
-    ::-webkit-scrollbar-thumb { background:#7e6c28; border-radius:4px; }
-    body { color:#d2b48c; }
+    ::-webkit-scrollbar-thumb { background:#5b7ad0; border-radius:4px; }
+    body { color:#80c0ff; }
   </style>
 </head>
 <body>
   <div id="room-root" style="display:flex; flex-direction:column; height:100vh;">
-    <div id="topbar" style="flex-shrink:0; height:60px; background-color:#2a2615; display:flex; align-items:center; justify-content:space-between; padding:0 20px; color:#d2b48c;">
+    <div id="topbar" style="flex-shrink:0; height:60px; background-color:#1e2f5f; display:flex; align-items:center; justify-content:space-between; padding:0 20px; color:#80c0ff;">
       <div style="display:flex; align-items:center; gap:10px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M13 22H4a2 2 0 0 1 0-4h12"></path>
-          <path d="M13.236 18a3 3 0 0 0-2.2-5"></path>
-          <path d="M16 9h.01"></path>
-          <path d="M16.82 3.94a3 3 0 1 1 3.237 4.868l1.815 2.587a1.5 1.5 0 0 1-1.5 2.1l-2.872-.453a3 3 0 0 0-3.5 3"></path>
-          <path d="M17 4.988a3 3 0 1 0-5.2 2.052A7 7 0 0 0 4 14.015 4 4 0 0 0 8 18"></path>
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:#80c0ff">
+  <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
         </svg>
         <span id="roomName" style="font-size:1.2rem; font-weight:bold;">room</span>
       </div>
       <div style="font-size:0.95rem; opacity:0.8;">Logged in as <strong id="usernameLabel"></strong></div>
     </div>
 
-    <div id="messages" style="flex:1; overflow-y:auto; padding:20px; background-color:#1e1b12;"></div>
+    <div id="messages" style="flex:1; overflow-y:auto; padding:20px; background-color:#0f1c3d;"></div>
 
-    <div style="flex-shrink:0; display:flex; align-items:center; padding:15px 20px; background-color:#2a2615;">
+    <div style="flex-shrink:0; display:flex; align-items:center; padding:15px 20px; background-color:#1e2f5f;">
       <input id="messageInput" type="text" placeholder="Type your message"
-        style="flex:1; padding:12px 16px; border-radius:6px; border:1.5px solid #5c3a00; background-color:#3b371f; color:#d2b48c; font-size:16px; outline:none; box-sizing:border-box; margin-right:10px; transition:border-color 0.25s;" />
+        style="flex:1; padding:12px 16px; border-radius:6px; border:1.5px solid #4663aa; background-color:#223e7f; color:#80c0ff; font-size:16px; outline:none; box-sizing:border-box; margin-right:10px; transition:border-color 0.25s;" />
       <button id="sendBtn"
-        style="padding:10px; background-color:#4b3b1b; border:none; border-radius:6px; cursor:pointer; color:#f0e4c3; transition:background-color 0.25s; display:flex; align-items:center; justify-content:center;">
+        style="padding:10px; background-color:#3b50a0; border:none; border-radius:6px; cursor:pointer; color:#cce6ff; transition:background-color 0.25s; display:flex; align-items:center; justify-content:center;">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path>
           <path d="m21.854 2.147-10.94 10.939"></path>
