@@ -3,39 +3,35 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Rat Chat — Home</title>
+  <title>Zenith Chat — Home</title>
   <style>
-    html, body { margin:0; padding:0; height:100%; background-color:#12110b; }
-    body { font-family: Arial, sans-serif; color: #d2b48c; }
+    html, body { margin:0; padding:0; height:100%; background-color:#0b1425; }
+    body { font-family: Arial, sans-serif; color: #80c0ff; }
     /* small helper so we can use identical inline style fallback */
   </style>
 </head>
 <body>
-  <div id="app-root" style="min-height:100vh; background-color:#12110b; display:flex; justify-content:center; align-items:center; padding:20px; font-family:Arial, sans-serif; color:#d2b48c;">
-    <div style="width:100%; max-width:420px; padding:30px 40px; border-radius:10px; background-color:#2a2615; box-shadow:0 5px 15px rgba(0,0,0,0.7); box-sizing:border-box; text-align:center;">
+  <div id="app-root" style="min-height:100vh; background-color:#0b1425; display:flex; justify-content:center; align-items:center; padding:20px; font-family:Arial, sans-serif; color:#80c0ff;">
+    <div style="width:100%; max-width:420px; padding:30px 40px; border-radius:10px; background-color:#1e2f5f; box-shadow:0 5px 15px rgba(0,0,80,0.6); box-sizing:border-box; text-align:center;">
       <div style="margin-bottom:10px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#d2b48c">
-          <path d="M13 22H4a2 2 0 0 1 0-4h12"></path>
-          <path d="M13.236 18a3 3 0 0 0-2.2-5"></path>
-          <path d="M16 9h.01"></path>
-          <path d="M16.82 3.94a3 3 0 1 1 3.237 4.868l1.815 2.587a1.5 1.5 0 0 1-1.5 2.1l-2.872-.453a3 3 0 0 0-3.5 3"></path>
-          <path d="M17 4.988a3 3 0 1 0-5.2 2.052A7 7 0 0 0 4 14.015 4 4 0 0 0 8 18"></path>
-        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#80c0ff">
+  <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
+</svg>
       </div>
 
-      <h1 style="margin:5px 0 10px; color:#c9a66b;">Rat Chat</h1>
-      <p style="margin-bottom:25px; font-size:14px; color:#bfa77a;">
+      <h1 style="margin:5px 0 10px; color:#a0d4ff;">Zenith Chat</h1>
+      <p style="margin-bottom:25px; font-size:14px; color:#98cfff;">
         Enter a username and choose a room to start chatting.
       </p>
 
       <div style="text-align:left; margin-bottom:5px; font-size:14px; font-weight:bold;">Username</div>
       <input id="username" type="text" placeholder="Enter a username"
-        style="width:100%; padding:10px 14px; margin-bottom:20px; border:1px solid #5c3a00; border-radius:4px; font-size:16px; background-color:#3b371f; color:#d2b48c; outline:none; box-sizing:border-box;" />
+        style="width:100%; padding:10px 14px; margin-bottom:20px; border:1px solid #4663aa; border-radius:4px; font-size:16px; background-color:#2a3e7f; color:#80c0ff; outline:none; box-sizing:border-box;" />
 
       <div style="text-align:left; margin-bottom:5px; font-size:14px; font-weight:bold;">Room</div>
       <div style="position:relative; margin-bottom:20px;">
         <select id="roomSelect"
-          style="width:100%; padding:10px 14px; border:1px solid #5c3a00; border-radius:4px; font-size:16px; background-color:#3b371f; color:#d2b48c; outline:none; box-sizing:border-box; appearance:none;">
+          style="width:100%; padding:10px 14px; border:1px solid #4663aa; border-radius:4px; font-size:16px; background-color:#2a3e7f; color:#80c0ff; outline:none; box-sizing:border-box; appearance:none;">
           <option value="general">General</option>
           <option value="chill">Chill</option>
           <option value="custom">Custom</option>
@@ -50,11 +46,11 @@
       <div id="customRoomWrap" style="display:none;">
         <div style="text-align:left; margin-bottom:5px; font-size:14px; font-weight:bold;">Custom Room Name</div>
         <input id="customRoom" type="text" placeholder="Enter custom room name"
-          style="width:100%; padding:10px 14px; margin-bottom:20px; border:1px solid #5c3a00; border-radius:4px; font-size:16px; background-color:#3b371f; color:#d2b48c; outline:none; box-sizing:border-box;" />
+          style="width:100%; padding:10px 14px; margin-bottom:20px; border:1px solid #4663aa; border-radius:4px; font-size:16px; background-color:#2a3e7f; color:#80c0ff; outline:none; box-sizing:border-box;" />
       </div>
 
       <button id="joinBtn"
-        style="width:100%; padding:12px; background-color:#4b3b1b; color:#f0e4c3; border:none; border-radius:4px; cursor:pointer; font-size:16px; font-weight:bold; transition:background-color 0.2s;">
+        style="width:100%; padding:12px; background-color:#3b50a0; color:#cce6ff; border:none; border-radius:4px; cursor:pointer; font-size:16px; font-weight:bold; transition:background-color 0.2s;">
         Join Chat
       </button>
     </div>
