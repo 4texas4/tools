@@ -26,7 +26,7 @@
 
     if (!username) {
       document.body.innerHTML = `
-        <div style="height:100vh; background-color:#12110b; color:#d2b48c; display:flex; justify-content:center; align-items:center; font-family:Arial, sans-serif; padding:20px; text-align:center;">
+        <div style="height:100vh; background-color:#12110b; color:#80c0ff; display:flex; justify-content:center; align-items:center; font-family:Arial, sans-serif; padding:20px; text-align:center;">
           <p>No username provided. Please go back and enter a username.</p>
         </div>
       `;
@@ -38,7 +38,7 @@
       messagesEl.innerHTML = '';
       if (!msgs || msgs.length === 0) {
         const p = document.createElement('p');
-        p.style.color = '#8a7c59';
+        p.style.color = '#91b0de';
         p.style.fontStyle = 'italic';
         p.textContent = 'No messages yet.';
         messagesEl.appendChild(p);
@@ -52,15 +52,15 @@
         const who = document.createElement('div');
         who.style.fontSize = '0.85rem';
         who.style.fontWeight = 'bold';
-        who.style.color = '#d2b48c';
+        who.style.color = '#80c0ff';
         who.style.marginBottom = '3px';
         who.textContent = msg.username;
 
         const bubble = document.createElement('div');
-        bubble.style.backgroundColor = '#2a2615';
+        bubble.style.backgroundColor = '#1e2f5f';
         bubble.style.padding = '10px 14px';
         bubble.style.borderRadius = '6px';
-        bubble.style.color = '#f0e4c3';
+        bubble.style.color = '#cce6ff';
         bubble.style.maxWidth = '80%';
         bubble.style.wordBreak = 'break-word';
         bubble.textContent = msg.text;
@@ -119,15 +119,15 @@
             const who = document.createElement('div');
             who.style.fontSize = '0.85rem';
             who.style.fontWeight = 'bold';
-            who.style.color = '#d2b48c';
+            who.style.color = '#80c0ff';
             who.style.marginBottom = '3px';
             who.textContent = msg.username;
 
             const bubble = document.createElement('div');
-            bubble.style.backgroundColor = '#2a2615';
+            bubble.style.backgroundColor = '#1e2f5f';
             bubble.style.padding = '10px 14px';
             bubble.style.borderRadius = '6px';
-            bubble.style.color = '#f0e4c3';
+            bubble.style.color = '#cce6ff';
             bubble.style.maxWidth = '80%';
             bubble.style.wordBreak = 'break-word';
             bubble.textContent = msg.text;
