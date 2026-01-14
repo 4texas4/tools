@@ -130,7 +130,7 @@ async function download(track) {
     writer
       .setFrame("TIT2", track.title)
       .setFrame("TPE1", [track.artist])
-      .setFrame("TALB", "SoundCloud")
+      .setFrame("TALB", track.artist)
       .setFrame("APIC", { type: 3, data: imgBuffer, description: "Cover" });
     writer.addTag();
 
