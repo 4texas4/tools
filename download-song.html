@@ -8,86 +8,21 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-
-body{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  overflow:hidden;
-  text-align:center;
-  padding:16px;
-}
-
-.bg{
-  position:fixed;
-  inset:0;
-  background-size:cover;
-  background-position:center;
-  filter:blur(14px) brightness(.75);
-  transform:scale(1.15);
-  z-index:-1;
-  transition:opacity .4s
-}
-
-.card{
-  backdrop-filter:blur(8px);
-  background:rgba(0,0,0,.35);
-  padding:32px 20px;
-  border-radius:20px;
-  width:100%;
-  max-width:480px;
-  max-height:90vh;
-  overflow:auto;
-}
-
-h1{
-  font-size:24px;
-  margin-bottom:8px;
-  word-break:break-word;
-}
-
-h2{
-  font-size:14px;
-  font-weight:400;
-  opacity:.85;
-  margin-bottom:24px;
-  word-break:break-word;
-}
-
-.spinner{
-  width:40px;
-  height:40px;
-  border:4px solid rgba(255,255,255,.3);
-  border-top:4px solid #fff;
-  border-radius:50%;
-  margin:0 auto 15px;
-  animation:s 1s linear infinite
-}
-
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;text-align:center;padding:16px}
+.bg{position:fixed;inset:0;background-size:cover;background-position:center;filter:blur(14px) brightness(.75);transform:scale(1.15);z-index:-1;transition:opacity .4s}
+.card{backdrop-filter:blur(8px);background:rgba(0,0,0,.35);padding:32px 20px;border-radius:20px;width:100%;max-width:480px;max-height:90vh;overflow:auto}
+h1{font-size:24px;margin-bottom:8px;word-break:break-word}
+h2{font-size:14px;font-weight:400;opacity:.85;margin-bottom:24px;word-break:break-word}
+.spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top:4px solid #fff;border-radius:50%;margin:0 auto 15px;animation:s 1s linear infinite}
 @keyframes s{to{transform:rotate(360deg)}}
-
 .status{font-size:14px;opacity:.9}
 .check{font-size:32px;margin-bottom:10px}
-
-/* Mobile tweaks */
 @media (max-width:600px){
-  .card{
-    padding:28px 18px;
-  }
-  h1{
-    font-size:28px;
-  }
-  h2{
-    font-size:18px;
-  }
-  .status{
-    font-size:16px;
-  }
-  .check{
-    font-size:40px;
-  }
+  .card{padding:28px 18px}
+  h1{font-size:28px}
+  h2{font-size:18px}
+  .status{font-size:16px}
+  .check{font-size:40px}
 }
 </style>
 </head>
@@ -128,22 +63,39 @@ bg.style.backgroundImage=`url(${j.artwork})`;
 
 await new Promise(o=>{
   let i=new Image;
+  i.crossOrigin="anonymous";
   i.src=j.artwork;
-  i.onload=o
+  i.onload=o;
+  i.onerror=o;
 });
 
 bg.style.opacity="1";
 
 let m=await fetch(j.streamUrl),
     mb=await m.arrayBuffer(),
-    ab=await (await fetch(j.artwork)).arrayBuffer(),
     w=new ID3Writer(mb);
 
 w.setFrame("TIT2",j.song)
  .setFrame("TPE1",[j.artist])
  .setFrame("TALB",j.artist)
- .setFrame("TPE2",j.artist)
- .setFrame("APIC",{type:3,data:ab,description:"Cover",useUnicodeEncoding:false});
+ .setFrame("TPE2",j.artist);
+
+if(j.artwork && 
+   j.artwork !== "https://upload.wikimedia.org/wikipedia/commons/3/3c/No-album-art.png"){
+
+   try{
+     let artFetch=await fetch(j.artwork,{mode:"cors"});
+     let ab=await artFetch.arrayBuffer();
+     w.setFrame("APIC",{
+       type:3,
+       data:ab,
+       description:"Cover",
+       useUnicodeEncoding:false
+     });
+   }catch(e){
+     console.warn("Artwork blocked, skipping...");
+   }
+}
 
 w.addTag();
 
@@ -158,7 +110,7 @@ x.click();
 x.remove();
 
 l.style.display="none";
-d.style.display="block"
+d.style.display="block";
 })();
 </script>
 
