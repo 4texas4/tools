@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Music</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #1db954;
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-heavy: rgba(0, 0, 0, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+        }
+
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            transition: 0.5s ease;
+        }
+
+        body.lyric-mode main { justify-content: flex-start; padding-top: 40px; }
+        body.lyric-mode #art-zone { width: 140px; height: 140px; margin-bottom: 20px; min-height: 140px; }
+        body.lyric-mode .track-meta h1 { font-size: 1.8rem; }
+        body.lyric-mode .player-controls { max-width: 450px; margin-bottom: 10px; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+        #bg-blur {
+            position: fixed; inset: -50px; z-index: -1;
+            background-size: cover; background-position: center;
+            filter: blur(60px) brightness(0.4);
+            transition: background-image 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(1.1);
+        }
+
+        #bg-overlay { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%); }
+
+        #sidebar {
+            width: 400px; background: var(--glass-heavy);
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; z-index: 10;
+        }
+
+        .sidebar-header { padding: 40px 30px 20px; display: flex; justify-content: space-between; align-items: center; }
+        #queue-list { flex: 1; overflow-y: auto; padding: 10px 20px; }
+
+        .q-row {
+            display: flex; align-items: center; padding: 12px; border-radius: 16px;
+            margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+            position: relative;
+        }
+        .q-row:hover { background: var(--glass); }
+        .q-row.active { background: rgba(29, 185, 84, 0.1); border-color: var(--accent); }
+        
+        .q-row img, .q-row .art-placeholder { 
+            width: 52px; height: 52px; border-radius: 10px; margin-right: 18px; object-fit: cover; flex-shrink: 0;
+        }
+
+        .remove-btn {
+            margin-left: auto; background: none; border: none; color: var(--text-dim);
+            font-size: 1.2rem; cursor: pointer; opacity: 0; transition: 0.2s; padding: 10px;
+        }
+        .q-row:hover .remove-btn { opacity: 1; }
+        .remove-btn:hover { color: #ff4d4d; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; position: relative; }
+
+        #art-zone {
+            width: 440px; height: 440px; aspect-ratio: 1 / 1; border-radius: 28px;
+            overflow: hidden; box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+            margin-bottom: 40px; background: var(--glass); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #art-zone img { width: 100%; height: 100%; object-fit: cover; }
+
+        .art-placeholder {
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1a1a1a, #000); color: var(--text-dim);
+            font-weight: 800; letter-spacing: 4px; font-size: 0.8rem;
+        }
+
+        .track-meta { text-align: center; margin-bottom: 30px; max-width: 600px; }
+        .track-meta h1 { margin: 0; font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+        .track-meta p { margin: 10px 0 0; color: var(--text-dim); font-size: 1.2rem; font-weight: 300; }
+
+        #lyrics-container {
+            width: 100%; max-width: 800px; height: 40vh; overflow-y: auto;
+            text-align: center; margin-top: 20px; padding: 40px 0; display: none;
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+        }
+
+        .lyric-line { font-size: 2rem; font-weight: 700; color: var(--text-dim); margin: 24px 0; transition: 0.3s; opacity: 0.3; cursor: pointer; }
+        .lyric-line.active { color: #fff; opacity: 1; transform: scale(1.1); }
+
+        .player-controls { width: 100%; max-width: 550px; }        
+        .timeline { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; font-size: 0.85rem; color: var(--text-dim); }
+        input[type="range"] { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; background: var(--glass-border); border-radius: 2px; }
+
+        .playback-btns { display: flex; justify-content: center; align-items: center; gap: 40px; }
+        .icon-btn { background: none; border: none; color: white; cursor: pointer; font-size: 2.5rem; transition: 0.2s; }
+        .icon-btn:hover { color: var(--accent); transform: scale(1.2); }
+        .icon-btn.active { color: var(--accent); }
+
+        .action-btn { background: var(--accent); color: #000; border: none; padding: 14px 32px; border-radius: 50px; font-weight: 700; cursor: pointer; }
+        .btn-glass { background: var(--glass); border: 1px solid var(--glass-border); color: white; padding: 12px 24px; border-radius: 50px; cursor: pointer; backdrop-filter: blur(10px); }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(30px); display: none; z-index: 100; flex-direction: column; align-items: center; }
+        .overlay-content { width: 100%; max-width: 1100px; height: 100vh; display: flex; flex-direction: column; padding: 60px 20px; }
+        .search-bar { width: 100%; background: var(--glass); border: 1px solid var(--glass-border); padding: 22px 35px; border-radius: 100px; color: white; font-size: 1.5rem; outline: none; }
+
+        #search-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; overflow-y: auto; flex: 1; padding-bottom: 40px; }
+        .result-card { background: var(--glass); border: 1px solid var(--glass-border); padding: 20px; border-radius: 24px; cursor: pointer; transition: 0.3s; }
+        .result-card img { width: 100%; aspect-ratio: 1; border-radius: 16px; object-fit: cover; margin-bottom: 15px; }
+
+        #toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 12px 30px; border-radius: 50px; font-weight: 700; display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <div id="bg-blur"></div>
+    <div id="bg-overlay"></div>
+    <div id="toast">Loading...</div>
+
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h2 style="margin:0; font-weight: 800; letter-spacing: -1px;">Queue</h2>
+            <button class="btn-glass" style="padding: 8px 16px; font-size: 0.8rem;" onclick="shuffleQueue()">🔀 Shuffle</button>
+        </div>
+        <div id="queue-list"></div>
+        <div style="padding: 30px;">
+            <button class="btn-glass" style="width:100%" onclick="showOverlay('spot-overlay')">♫ Import Spotify</button>
+        </div>
+    </aside>
+
+    <main>
+        <div style="position: absolute; top: 40px; right: 40px; display: flex; gap: 15px;">
+            <button class="action-btn" onclick="showOverlay('search-overlay')">🔍 Search</button>
+        </div>
+
+        <div id="art-zone"></div>
+        
+        <div class="track-meta">
+            <h1 id="track-title">Zenith Music</h1>
+            <p id="track-artist">Your music, beautifully streamed</p>
+        </div>
+
+        <div id="lyrics-container"></div>
+
+        <div class="player-controls">
+            <div class="timeline">
+                <span id="time-cur">0:00</span>
+                <input type="range" id="seek-bar" value="0">
+                <span id="time-dur">0:00</span>
+            </div>
+            <div class="playback-btns">
+                <button class="icon-btn" onclick="changeTrack(-1)">⏮</button>
+                <button id="play-btn" class="icon-btn" style="font-size: 4.5rem;" onclick="togglePlay()">▶</button>
+                <button class="icon-btn" onclick="changeTrack(1)">⏭</button>
+                <button id="lyric-btn" class="icon-btn" style="font-size: 1.8rem;" onclick="toggleLyrics()">🎤</button>
+            </div>
+            <div style="text-align:center; margin-top: 40px;">
+                <button id="dl-btn" class="btn-glass" style="display:none" onclick="handleDownload()">⬇ Download MP3</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="search-overlay" class="overlay">
+        <div class="overlay-content">
+            <div class="search-input-wrap" style="width: 100%; max-width: 800px; margin: 0 auto 40px;">
+                <button class="btn-glass" style="float:right; margin-bottom: 20px;" onclick="hideOverlays()">✕ Close</button>
+                <h1 style="font-size: 3rem; font-weight: 800; margin: 0 0 20px;">Search</h1>
+                <input type="text" class="search-bar" placeholder="Artists, songs..." onkeypress="if(event.key==='Enter') execSearch(this.value)">
+            </div>
+            <div id="search-results"></div>
+        </div>
+    </div>
+
+    <div id="spot-overlay" class="overlay">
+        <div class="overlay-content" style="justify-content: center; align-items: center; text-align: center;">
+            <div style="max-width: 500px; width: 100%;">
+                <button class="btn-glass" style="position: absolute; top: 40px; right: 40px" onclick="hideOverlays()">✕</button>
+                <h1 style="font-size: 3rem; font-weight: 800;">Spotify Import</h1>
+                <p style="color: var(--text-dim); margin-bottom: 40px;">Paste a public playlist link</p>
+                <input type="text" id="spot-url" class="search-bar" style="font-size: 1.1rem; text-align: center;" placeholder="Paste URL here...">
+                <button class="action-btn" style="width:100%; margin-top: 20px;" onclick="importSpotify()">Import Playlist</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="player"></audio>
+
+    <script>
+        // Load metadata and MP3 encoding libraries
+        (function() {
+            const scripts = [
+                "https://cdn.jsdelivr.net/npm/browser-id3-writer@4.4.0/dist/browser-id3-writer.min.js",
+                "https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"
+            ];
+            scripts.forEach(src => {
+                const script = document.createElement('script');
+                script.src = src;
+                document.head.appendChild(script);
+            });
+        })();
+
+        const audio = document.getElementById('player');
+        const toast = document.getElementById('toast');
+        const bgBlur = document.getElementById('bg-blur');
+        const lyricsContainer = document.getElementById('lyrics-container');
+        
+        let queue = JSON.parse(localStorage.getItem('wave_v4_queue') || '[]');
+        let currentIndex = -1;
+        let currentTrackData = null;
+        let lyricsData = [];
+        let isLyricMode = false;
+
+        function cleanQuery(str) {
+            return str.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '+');        
+        }
+
+        async function getToken() {
+            const res = await fetch('https://spotify-nu-six.vercel.app/api/token');
+            const data = await res.json();
+            return data.access_token;
+        }
+
+        function showOverlay(id) { document.getElementById(id).style.display = 'flex'; }
+        function hideOverlays() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); }
+        
+        // Upgraded notify system to handle persistent messages
+        let toastTimeout;
+        function notify(msg, persist = false) { 
+            toast.innerText = msg; 
+            toast.style.display = 'block'; 
+            clearTimeout(toastTimeout);
+            if (!persist) toastTimeout = setTimeout(() => toast.style.display='none', 3000); 
+        }
+
+        function getArt(url) {
+            if (!url || url.includes('default_')) return `<div class="art-placeholder">NO ART</div>`;
+            return `<img src="${url}" onerror="this.outerHTML='<div class=\'art-placeholder\'>NO ART</div>'">`;
+        }
+
+        async function execSearch(query) {
+            notify("Searching Cloud...");
+            try {
+                const res = await fetch(`https://tidal.4texasplayz4.workers.dev/s/${cleanQuery(query)}`);
+                const data = await res.json();
+                const results = data.results || [];
+                const container = document.getElementById('search-results');
+                container.innerHTML = '';
+                results.forEach(t => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    card.onclick = () => { addToQueue(t); hideOverlays(); };
+                    card.innerHTML = `${getArt(t.artwork)}<h4 style="margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${t.title}</h4><p style="margin:5px 0 0; font-size:0.85rem; color:var(--text-dim)">${t.artist}</p>`;
+                    container.appendChild(card);
+                });
+            } catch(e) { notify("Search failed"); }
+        }
+
+        async function playTrack(index) {
+            if (index < 0 || index >= queue.length) return;
+            currentIndex = index;
+            let track = queue[index];
+            notify("Resolving Stream...");
+
+            if (track.isSpot) {
+                let search = await fetch(`https://tidal.4texasplayz4.workers.dev/s/${cleanQuery(track.title + ' ' + track.artist)}`);
+                let sData = await search.json();
+                let results = sData.results || [];
+
+                if (!results || results.length === 0) {
+                    search = await fetch(`https://tidal.4texasplayz4.workers.dev/s/${cleanQuery(track.title)}`);
+                    sData = await search.json();
+                    results = sData.results || [];
+                }
+
+                if (results && results.length > 0) {
+                    track.id = results[0].id;
+                    track.artwork = results[0].artwork;
+                    track.isSpot = false;
+                    save();
+                } else { 
+                    return alert("Could not find song on Tidal"); 
+                }
+            }
+
+            try {
+                const res = await fetch(`https://tidal.4texasplayz4.workers.dev/d/${track.id}`);
+                const data = await res.json();
+                
+                currentTrackData = data;                
+                audio.src = data.streamUrl;
+                document.getElementById('art-zone').innerHTML = getArt(data.artwork);
+                bgBlur.style.backgroundImage = `url(${data.artwork})`;
+                document.getElementById('track-title').innerText = data.song;
+                document.getElementById('track-artist').innerText = data.artist;
+                document.getElementById('dl-btn').style.display = 'inline-block';
+                audio.play();
+                document.getElementById('play-btn').innerText = '⏸';
+                updateQueueUI();
+                
+                if (isLyricMode) fetchLyrics(data.artist, data.song);
+            } catch (e) { notify("Playback Error"); }
+        }
+
+        function removeFromQueue(e, index) {
+            e.stopPropagation();
+            queue.splice(index, 1);
+            if (index === currentIndex) {
+                audio.pause();
+                audio.src = '';
+                currentIndex = -1;
+            } else if (index < currentIndex) {
+                currentIndex--;
+            }
+            save();
+        }
+
+        async function fetchLyrics(artist, title) {
+            lyricsContainer.innerHTML = '<p class="lyric-line" style="opacity:1">Searching for lyrics...</p>';
+            lyricsData = [];
+            const cleanArtist = artist.replace(/\(.*\)|\[.*\]/g, '').trim();
+            const cleanTitle = title.replace(/\(.*\)|\[.*\]/g, '').trim();
+            try {
+                const res = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`);
+                const data = await res.json();
+                if (data.syncedLyrics) parseLyrics(data.syncedLyrics);
+                else if (data.plainLyrics) lyricsContainer.innerHTML = data.plainLyrics.split('\n').map(l => `<div class="lyric-line" style="opacity:1">${l}</div>`).join('');
+                else lyricsContainer.innerHTML = '<p class="lyric-line" style="opacity:1">Lyrics not found</p>';
+            } catch (e) { lyricsContainer.innerHTML = '<p class="lyric-line" style="opacity:1">Unable to load lyrics</p>'; }
+        }
+
+        function parseLyrics(lrc) {
+            const lines = lrc.split('\n');
+            lyricsData = lines.map((line, index) => {
+                const match = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
+                if (match) {
+                    const minutes = parseInt(match[1]);
+                    const seconds = parseFloat(match[2]);
+                    return { time: minutes * 60 + seconds, text: match[3].trim(), id: `line-${index}` };
+                }
+                return null;
+            }).filter(l => l && l.text);
+            lyricsContainer.innerHTML = lyricsData.map(l => `<div class="lyric-line" id="${l.id}" onclick="audio.currentTime=${l.time}">${l.text}</div>`).join('');
+        }
+
+        function toggleLyrics() {
+            isLyricMode = !isLyricMode;
+            document.body.classList.toggle('lyric-mode', isLyricMode);
+            lyricsContainer.style.display = isLyricMode ? 'block' : 'none';
+            document.getElementById('lyric-btn').classList.toggle('active', isLyricMode);
+            if (isLyricMode && currentTrackData) fetchLyrics(currentTrackData.artist, currentTrackData.song || currentTrackData.title);
+        }
+
+        audio.ontimeupdate = () => {
+            const b = document.getElementById('seek-bar');
+            b.max = audio.duration || 0; b.value = audio.currentTime;
+            document.getElementById('time-cur').innerText = formatTime(audio.currentTime);
+            document.getElementById('time-dur').innerText = formatTime(audio.duration);
+            if (isLyricMode && lyricsData.length > 0) {
+                const activeIndex = lyricsData.findIndex((line, i) => {
+                    const nextLine = lyricsData[i + 1];
+                    return audio.currentTime >= line.time && (!nextLine || audio.currentTime < nextLine.time);
+                });
+                if (activeIndex !== -1) {
+                    document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('active'));
+                    const activeLine = document.getElementById(lyricsData[activeIndex].id);
+                    if (activeLine) {
+                        activeLine.classList.add('active');
+                        activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        };
+
+        function togglePlay() { 
+            if(!audio.src) return;
+            audio.paused ? (audio.play(), document.getElementById('play-btn').innerText = '⏸') : (audio.pause(), document.getElementById('play-btn').innerText = '▶'); 
+        }
+        function changeTrack(dir) { playTrack(currentIndex + dir); }
+        document.getElementById('seek-bar').oninput = (e) => audio.currentTime = e.target.value;
+        audio.onended = () => changeTrack(1);
+        function formatTime(s) { if(isNaN(s)) return "0:00"; const m=Math.floor(s/60), sc=Math.floor(s%60); return `${m}:${sc<10?'0':''}${sc}`; }
+        function addToQueue(t) { queue.push(t); save(); if (currentIndex === -1) playTrack(queue.length - 1); }
+        function shuffleQueue() { queue.sort(() => Math.random() - 0.5); save(); }
+        function save() { localStorage.setItem('wave_v4_queue', JSON.stringify(queue)); updateQueueUI(); }
+        
+        function updateQueueUI() {
+            const list = document.getElementById('queue-list');
+            list.innerHTML = '';
+            queue.forEach((t, i) => {
+                const item = document.createElement('div');
+                item.className = `q-row ${i === currentIndex ? 'active' : ''}`;
+                item.onclick = () => playTrack(i);
+                item.innerHTML = `
+                    ${getArt(t.artwork)}
+                    <div style="overflow:hidden">
+                        <div style="font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden">${t.title}</div>
+                        <div style="font-size:0.8rem; color:var(--text-dim)">${t.artist} ${t.isSpot ? '• <span style="color:#1db954">Spotify</span>' : ''}</div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFromQueue(event, ${i})">✕</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        async function handleDownload() {
+            if (!currentTrackData) return;
+            
+            try {
+                if (typeof lamejs === 'undefined' || typeof ID3Writer === 'undefined') {
+                    throw new Error("Transcoding libraries are still loading. Try again in a moment.");
+                }
+
+                notify("Fetching Audio Data...", true);
+                const proxyUrl = "https://ratproxy.vercel.app/?";
+                
+                const [audioResponse, artResponse] = await Promise.all([
+                    fetch(proxyUrl + encodeURIComponent(currentTrackData.streamUrl)),
+                    currentTrackData.artwork ? 
+                        fetch(proxyUrl + encodeURIComponent(currentTrackData.artwork)).catch(() => null) : 
+                        null
+                ]);
+
+                if (!audioResponse.ok) throw new Error('Failed to fetch audio stream');
+
+                const contentType = audioResponse.headers.get('content-type') || '';
+                const isMp3 = contentType.includes('mpeg') || currentTrackData.streamUrl.toLowerCase().includes('.mp3');
+                
+                let finalArrayBuffer;
+
+                // Check if it's already an MP3, if not, decode and encode it!
+                if (isMp3) {
+                    finalArrayBuffer = await audioResponse.arrayBuffer();
+                } else {
+                    notify("Decoding Original Audio...", true);
+                    const audioBufferData = await audioResponse.arrayBuffer();
+                    
+                    // Decode M4A/FLAC to PCM
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const decodedAudio = await audioCtx.decodeAudioData(audioBufferData);
+                    
+                    const channels = decodedAudio.numberOfChannels;
+                    const sampleRate = decodedAudio.sampleRate;
+                    const lameEncoder = new lamejs.Mp3Encoder(channels, sampleRate, 192); // Transcode to 192kbps MP3
+                    
+                    const mp3Data = [];
+                    const sampleBlockSize = 1152;
+                    
+                    const left = decodedAudio.getChannelData(0);
+                    const right = channels > 1 ? decodedAudio.getChannelData(1) : left;
+                    
+                    const leftInt16 = new Int16Array(sampleBlockSize);
+                    const rightInt16 = new Int16Array(sampleBlockSize);
+                    
+                    // Process PCM in chunks
+                    for (let i = 0; i < left.length; i += sampleBlockSize) {
+                        const chunkLen = Math.min(sampleBlockSize, left.length - i);
+                        
+                        // Convert float32 bounds [-1.0, 1.0] to int16 
+                        for (let j = 0; j < chunkLen; j++) {
+                            const l = Math.max(-1, Math.min(1, left[i + j]));
+                            leftInt16[j] = l < 0 ? l * 0x8000 : l * 0x7FFF;
+                            
+                            if (channels > 1) {
+                                const r = Math.max(-1, Math.min(1, right[i + j]));
+                                rightInt16[j] = r < 0 ? r * 0x8000 : r * 0x7FFF;
+                            }
+                        }
+                        
+                        const mp3buf = channels > 1 
+                            ? lameEncoder.encodeBuffer(leftInt16.subarray(0, chunkLen), rightInt16.subarray(0, chunkLen))
+                            : lameEncoder.encodeBuffer(leftInt16.subarray(0, chunkLen));
+                            
+                        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+                        
+                        // Yield to browser UI to update progress roughly once per second of audio
+                        if (i % (sampleBlockSize * 40) === 0) {
+                            notify(`Encoding MP3: ${Math.round((i / left.length) * 100)}%`, true);
+                            await new Promise(r => setTimeout(r, 0));
+                        }
+                    }
+                    
+                    const flushed = lameEncoder.flush();
+                    if (flushed.length > 0) mp3Data.push(flushed);
+                    
+                    finalArrayBuffer = await new Blob(mp3Data, { type: 'audio/mp3' }).arrayBuffer();
+                }
+
+                // File is now guaranteed to be a standard MP3. Apply ID3 Metadata cleanly!
+                notify("Injecting Cover Art & Metadata...", true);
+                const artArray = (artResponse && artResponse.ok) ? await artResponse.arrayBuffer() : null;
+                const writer = new ID3Writer(finalArrayBuffer);
+                
+                const trackTitle = currentTrackData.song || currentTrackData.title || "Unknown Title";
+                const trackArtist = currentTrackData.artist || "Unknown Artist";
+                
+                writer.setFrame('TIT2', trackTitle)
+                      .setFrame('TPE1', [trackArtist])
+                      .setFrame('TALB', currentTrackData.album || trackArtist);
+
+                if (artArray) {
+                    writer.setFrame('APIC', {
+                        type: 3,
+                        data: artArray,
+                        description: 'Cover',
+                        useUnicodeEncoding: true
+                    });
+                }
+                
+                writer.addTag();
+                const taggedBlob = writer.getBlob();
+
+                // Trigger Download
+                const blobUrl = URL.createObjectURL(taggedBlob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `${trackTitle} - ${trackArtist}.mp3`;
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }, 2000);
+
+                notify("Download Successful!");
+            } catch (e) {
+                console.error('Download error:', e);
+                notify(e.message || "Download failed. Check console.");
+            }
+        }
+
+        async function importSpotify() {
+            const url = document.getElementById('spot-url').value;
+            const id = url.match(/playlist\/([a-zA-Z0-9]+)/)?.[1];
+            if (!id) return alert("Invalid Spotify URL");
+            notify("Syncing Spotify Library...");
+            try {
+                const token = await getToken();
+                const res = await fetch(`https://api.spotify.com/v1/playlists/${id}/tracks`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                data.items.forEach(item => {
+                    if (item.track) queue.push({ title: item.track.name, artist: item.track.artists[0].name, artwork: item.track.album.images[0]?.url, id: item.track.id, isSpot: true });
+                });
+                save();
+                hideOverlays();
+            } catch (e) { alert("Import failed. Check if playlist is public."); }
+        }
+
+        updateQueueUI();
+    </script>
+</body>
+</html>
