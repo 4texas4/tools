@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail | Disposable Inbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @keyframes slide-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-in { animation: slide-in 0.3s ease-out forwards; }
+        
+        @keyframes toast-enter { from { opacity: 0; transform: translateY(20px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
+        .toast-enter { animation: toast-enter 0.3s ease-out forwards; }
+        
+        .no-arrow { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        .bg-blobs { background-image: radial-gradient(at 0% 0%, hsla(220, 100%, 75%, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, hsla(240, 100%, 75%, 0.15) 0px, transparent 50%); }
+    </style>
+</head>
+<body class="h-screen overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl z-[100] hidden font-medium text-sm flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-msg">Copied to clipboard</span>
+    </div>
+
+    <div id="start-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-blobs px-4">
+        <div class="max-w-md w-full text-center relative z-10 animate-slide-in">
+            <div class="mb-8 inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-xl shadow-blue-500/30 ring-4 ring-slate-800">
+                <i class="fa-solid fa-envelope text-3xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-3 tracking-tight">Mail</h1>
+            <p class="text-slate-400 mb-10 text-lg">Instant, anonymous, disposable email.</p>
+            <div class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col gap-5 border border-slate-100/10">
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden">
+                    <input id="user-input" type="text" placeholder="username" value="" class="w-1/2 px-4 py-3.5 bg-transparent border-none focus:outline-none text-slate-700 font-semibold text-left placeholder:text-slate-400">
+                    <div class="w-px h-8 bg-slate-300 mx-1"></div>
+                    <div class="relative w-1/2">
+                        <select id="domain-input" class="w-full px-4 py-3.5 bg-transparent border-none focus:outline-none text-slate-600 font-medium cursor-pointer no-arrow pr-8">
+                            <option value="@ayu.biz.id">@ayu.biz.id</option>
+                            <option value="@ana.my.id">@ana.my.id</option>
+                            <option value="@andira.my.id">@andira.my.id</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="launchApp()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 rounded-xl transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2">
+                    <span>Generate Inbox</span>
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden flex-col h-screen">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-20 shadow-sm relative">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-sm shadow-md">
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <h2 class="font-bold text-slate-800 tracking-tight hidden sm:block">Mail</h2>
+            </div>
+            <div class="flex items-center gap-2 md:gap-4 bg-slate-50 border border-slate-200 rounded-lg p-1 pr-3">
+                <button onclick="copyAddress()" class="p-1.5 md:p-2 bg-white rounded shadow-sm text-slate-500 hover:text-blue-600 transition-colors group relative" title="Copy Address">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+                <div class="flex items-center justify-center">
+                    <span id="display-address" class="text-xs md:text-sm font-semibold text-slate-800 truncate max-w-[150px] md:max-w-[250px]"></span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex items-center text-[10px] text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded-full">
+                    <div class="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></div>
+                    LIVE
+                </div>
+                <button onclick="logout()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors" title="Log out">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex flex-1 overflow-hidden relative">
+            <div id="sidebar" class="w-full md:w-[380px] lg:w-[420px] border-r border-slate-200 bg-white flex flex-col shrink-0 absolute md:relative inset-0 z-10 transition-transform duration-300">
+                <div class="p-4 border-b border-slate-200/60 flex justify-between items-center sticky top-0 z-10 bg-white">
+                    <h3 class="font-bold text-slate-800 text-lg">Inbox</h3>
+                    <div id="refresh-indicator" class="text-xs text-blue-500 font-medium opacity-0 transition-opacity flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate animate-spin"></i> Syncing
+                    </div>
+                </div>
+                <div id="email-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
+            </div>
+
+            <div id="viewer" class="w-full hidden md:flex flex-1 flex-col bg-white absolute md:relative inset-0 z-20 transition-transform duration-300">
+                <div id="email-header" class="hidden border-b border-slate-100 p-4 md:p-8 shrink-0 relative">
+                    <button onclick="closeMail()" class="md:hidden mb-4 text-slate-500 hover:text-slate-800 flex items-center gap-2 font-medium text-sm">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Inbox
+                    </button>
+                    <div class="flex justify-between items-start mb-6">
+                        <h1 id="view-subject" class="text-xl md:text-3xl font-bold text-slate-900 leading-tight pr-4"></h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div id="avatar" class="w-12 h-12 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 border border-slate-300 flex items-center justify-center text-slate-600 font-bold text-lg uppercase shadow-sm shrink-0">?</div>
+                        <div class="flex flex-col min-w-0">
+                            <span id="view-sender-name" class="text-sm md:text-base font-bold text-slate-900 truncate"></span>
+                            <span id="view-sender-email" class="text-xs md:text-sm text-slate-500 truncate"></span>
+                        </div>
+                        <div class="ml-auto text-xs md:text-sm text-slate-400 whitespace-nowrap font-medium" id="view-time"></div>
+                    </div>
+                </div>
+                <div id="empty-view" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-6 text-center bg-slate-50/50">
+                    <div class="mb-6 relative w-32 h-32 flex items-center justify-center">
+                        <div class="absolute inset-0 bg-blue-100 rounded-full animate-pulse-soft"></div>
+                        <i class="fa-regular fa-envelope text-5xl text-blue-500 relative z-10"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">No message selected</h3>
+                    <p class="text-sm text-slate-500 max-w-[250px]">Select an email from the list to read.</p>
+                </div>
+                <div id="iframe-container" class="hidden flex-1 relative bg-white overflow-hidden">
+                    <iframe id="email-frame" class="w-full h-full border-none"></iframe>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentAddress = "", selectedEmailId = null, refreshInterval = null, cachedEmails = [];
+        
+        function timeAgo(dateString) {
+            const date = new Date(dateString), now = new Date(), seconds = Math.floor((now - date) / 1000);
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            if (days < 30) return `${days}d ago`;
+            const months = Math.floor(days / 30);
+            if (months < 12) return `${months}mo ago`;
+            const years = Math.floor(months / 12);
+            return `${years}y ago`;
+        }
+
+        function extractNameAndEmail(senderStr) {
+            const match = senderStr.match(/(.*?)<(.*?)>/);
+            if (match) return { name: match[1].replace(/"/g, '').trim() || match[2].split('@')[0], email: `<${match[2]}>` };
+            return { name: senderStr.split('@')[0], email: `<${senderStr}>` };
+        }
+
+        function copyAddress() {
+            navigator.clipboard.writeText(currentAddress).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.remove('hidden');
+                toast.classList.add('toast-enter');
+                setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('toast-enter'); }, 3000);
+            });
+        }
+
+        async function launchApp() {
+            const userInput = document.getElementById("user-input").value.trim();
+            const user = userInput || "hello", domain = document.getElementById("domain-input").value;
+            currentAddress = user + domain;
+            document.getElementById("start-screen").classList.add("hidden");
+            document.getElementById("app").classList.replace("hidden", "flex");
+            document.getElementById("display-address").textContent = currentAddress;
+            await fetchEmails(true); 
+            refreshInterval = setInterval(fetchEmails, 5000);
+        }
+
+        function logout() {
+            if(refreshInterval) clearInterval(refreshInterval);
+            currentAddress = "";
+            selectedEmailId = null;
+            cachedEmails = [];
+            document.getElementById("email-list").innerHTML = "";
+            document.getElementById("app").classList.replace("flex", "hidden");
+            document.getElementById("start-screen").classList.remove("hidden");
+            document.getElementById("empty-view").classList.remove("hidden");
+            document.getElementById("email-header").classList.add("hidden");
+            document.getElementById("iframe-container").classList.add("hidden");
+            document.getElementById("sidebar").classList.replace("hidden", "flex");
+            document.getElementById("viewer").classList.add("md:flex");
+        }
+
+        async function fetchEmails(isFirstLoad = false) {
+            if (!currentAddress) return;
+            const indicator = document.getElementById("refresh-indicator");
+            
+            try {
+                const res = await fetch(`https://api.apps.web.id/email/get?address=${currentAddress}`);
+                let emails = await res.json();
+                if (!Array.isArray(emails)) emails = [];
+                emails.sort((a, b) => new Date(b.sent_time) - new Date(a.sent_time));
+
+                const dataChanged = JSON.stringify(emails) !== JSON.stringify(cachedEmails);
+                
+                if (dataChanged) {
+                    if (!isFirstLoad) indicator.style.opacity = "1";
+                    cachedEmails = emails;
+                    renderEmailList(emails, !isFirstLoad); 
+                    if (!isFirstLoad) {
+                        setTimeout(() => { indicator.style.opacity = "0"; }, 1500);
+                    }
+                }
+            } catch (err) { 
+                console.error("Fetch error:", err); 
+            }
+        }
+
+        function renderEmailList(emails, skipAnimation = false) {
+            const list = document.getElementById("email-list");
+            if (!emails || emails.length === 0) {
+                list.innerHTML = `<div class="flex flex-col items-center justify-center p-12 text-center h-full"><i class="fa-solid fa-inbox text-2xl text-slate-200 mb-4"></i><p class="text-xs text-slate-400">Waiting for incoming mail...</p></div>`;
+                return;
+            }
+            
+            list.innerHTML = emails.map((mail, index) => {
+                const isActive = String(selectedEmailId) === String(mail.id);
+                const animClass = skipAnimation ? "" : "animate-slide-in";
+                
+                const cardClasses = isActive 
+                    ? `bg-blue-50 border-blue-200` 
+                    : `bg-white border-transparent hover:bg-slate-50`;
+                
+                const titleClasses = isActive ? `text-blue-700` : `text-slate-800`;
+                const timeClasses = isActive ? `text-blue-500` : `text-slate-400`;
+                
+                return `
+                    <div id="email-item-${mail.id}" 
+                         onclick="openMail(${index})" 
+                         class="email-card p-4 rounded-xl cursor-pointer transition-all border ${animClass} ${cardClasses}">
+                        <h4 class="email-title text-sm font-bold truncate mb-1 ${titleClasses}">
+                            ${mail.title || '(No Subject)'}
+                        </h4>
+                        <div class="email-time flex items-center text-[11px] font-medium ${timeClasses}">
+                            <i class="fa-regular fa-clock mr-1.5 opacity-70"></i>
+                            ${timeAgo(mail.sent_time)}
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function openMail(index) {
+            // 1. Get the email from cache
+            const mail = cachedEmails[index];
+            
+            // 2. Set global state
+            selectedEmailId = mail.id;
+
+            // 3. Perform a clean re-render of the list
+            renderEmailList(cachedEmails, true);
+
+            // 4. Update Viewer UI
+            const info = extractNameAndEmail(mail.sender);
+            if (window.innerWidth < 768) document.getElementById("sidebar").classList.replace("flex", "hidden");
+            
+            document.getElementById("viewer").classList.replace("hidden", "flex");
+            document.getElementById("empty-view").classList.add("hidden");
+            document.getElementById("email-header").classList.remove("hidden");
+            document.getElementById("iframe-container").classList.remove("hidden");
+            
+            document.getElementById("view-subject").textContent = mail.title || '(No Subject)';
+            document.getElementById("view-sender-name").textContent = info.name;
+            document.getElementById("view-sender-email").textContent = info.email;
+            
+            const date = new Date(mail.sent_time);
+            document.getElementById("view-time").textContent = `${date.toLocaleDateString()} at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            document.getElementById("avatar").textContent = info.name.charAt(0).toUpperCase();
+            
+            let content = mail.html_content || mail.text_content || "<p class='text-slate-400 italic'>No content</p>";
+            const style = `<base target="_blank"><style>body { font-family: 'Inter', sans-serif; line-height: 1.6; color: #1e293b; padding: 24px; margin: 0; font-size: 14px; } img { max-width: 100% !important; height: auto !important; border-radius: 8px; } a { color: #2563eb; text-decoration: none; } blockquote { border-left: 3px solid #e2e8f0; padding-left: 1rem; margin-left: 0; color: #64748b; }</style>`;
+            document.getElementById("email-frame").srcdoc = content.includes("<head>") ? content.replace("<head>", `<head>${style}`) : style + content;
+        }
+
+        function closeMail() {
+            selectedEmailId = null;
+            document.getElementById("sidebar").classList.replace("hidden", "flex");
+            if (window.innerWidth < 768) {
+                document.getElementById("viewer").classList.replace("flex", "hidden");
+            } else {
+                document.getElementById("empty-view").classList.remove("hidden");
+                document.getElementById("email-header").classList.add("hidden");
+                document.getElementById("iframe-container").classList.add("hidden");
+            }
+            renderEmailList(cachedEmails, true);
+        }
+    </script>
+</body>
+</html>
